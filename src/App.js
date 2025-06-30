@@ -307,3 +307,18 @@ useEffect(() => {
 
 // สรุป: ถ้าเปิดผ่าน HTTPS และ Allow แล้ว มือถือจะใช้ตำแหน่งได้
 // ถ้ายังไม่ได้ ให้ reset permission หรือเปลี่ยน browser
+
+// หมายเหตุเกี่ยวกับ error manifest.json และ favicon.ico:
+// - ข้อความ "Failed to load resource: net::ERR_HTTP2_PROTOCOL_ERROR" สำหรับ manifest.json และ favicon.ico
+//   มักเกิดจากปัญหา CDN, proxy, หรือ server ที่ให้บริการไฟล์ static เหล่านี้
+// - ไม่กระทบการทำงานหลักของ React app (เว้นแต่ต้องใช้ favicon หรือ manifest จริง ๆ)
+// - ถ้า deploy บน Vercel หรือ cloud ให้แน่ใจว่าไฟล์ public/manifest.json และ public/favicon.ico มีอยู่จริงในโปรเจกต์
+// - ตรวจสอบว่าใน public/index.html มีบรรทัดเหล่านี้:
+//   <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+//   <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+// - ถ้าใช้ custom domain หรือ proxy ให้แน่ใจว่าเส้นทางไฟล์ static ถูกต้อง
+
+// สรุป: 
+// - เพิ่มไฟล์ favicon.ico และ manifest.json ใน public/
+// - ปัญหานี้ไม่เกี่ยวกับโค้ดใน App.js
+// - ถ้าไม่ต้องการ error นี้ ให้ตรวจสอบไฟล์ใน public/ และเส้นทางใน index.html ให้ถูกต้อง
