@@ -74,8 +74,8 @@ app.get('/favicon.ico', (req, res) => {
 });
 
 // เพิ่มหน้า backend admin สำหรับดูข้อมูลคำร้อง (ต้องอยู่หลัง favicon และก่อน app.listen)
-app.get('/', (req, res) => {
-  console.log('GET / called');
+app.get('/admin', (req, res) => {
+  console.log('GET /admin called');
   const logPath = path.join(__dirname, 'requests.log');
   let rows = '';
   let total = 0;
@@ -159,13 +159,11 @@ app.get('/', (req, res) => {
   `);
 });
 
-// Serve frontend build (React) for production use
+// --- ส่วน serve frontend build ---
 const frontendBuildPath = path.join(__dirname, '..', 'build');
 if (fs.existsSync(frontendBuildPath)) {
   app.use(express.static(frontendBuildPath));
   app.get('/admin', (req, res) => {
-    // admin backend table
-    console.log('GET /admin called');
     const logPath = path.join(__dirname, 'requests.log');
     let rows = '';
     let total = 0;
@@ -248,6 +246,13 @@ if (fs.existsSync(frontendBuildPath)) {
       </html>
     `);
   });
+
+  // / = React frontend (index.html)
+  app.get('/', (req, res) => {
+    res.sendFile(path.join(frontendBuildPath, 'index.html'));
+  });
+
+  // path อื่นๆ (ยกเว้น /api, /uploads, /admin) = React frontend (index.html)
   app.get(/^\/(?!api|uploads|admin).*/, (req, res) => {
     res.sendFile(path.join(frontendBuildPath, 'index.html'));
   });
@@ -300,3 +305,35 @@ app.listen(PORT, () => {
 // ตัวอย่างโค้ดนี้ถูกต้องแล้ว ไม่ต้องแก้ไขเพิ่ม
 // หากยังไม่มีข้อมูล ให้ไปที่หน้าเว็บ React กรอกฟอร์มและกด "ส่งคำร้อง"
 // เมื่อส่งสำเร็จ กลับมาที่ http://localhost:4000 จะเห็นข้อมูลในตาราง
+// หากยังไม่มีข้อมูล ให้ไปที่หน้าเว็บ React กรอกฟอร์มและกด "ส่งคำร้อง"
+// เมื่อส่งสำเร็จ กลับมาที่ http://localhost:4000 จะเห็นข้อมูลในตาราง
+
+// หมายเหตุสำหรับการเผยแพร่เว็บให้เป็นสาธารณะ (public link):
+// 1. คุณต้องรัน backend (node index.js) บนเครื่องที่มี public IP หรือ cloud server
+// 2. เปิด port 4000 ใน firewall และ router (port forwarding) ให้เข้าถึงจากอินเทอร์เน็ต
+// 3. ถ้าอยู่ในวง LAN ให้คนในวงเดียวกันเข้าผ่าน http://<your-ip>:4000
+// 4. ถ้าต้องการลิงก์สาธารณะง่าย ๆ ให้ใช้ ngrok (https://ngrok.com/)
+//    - ติดตั้ง ngrok แล้วรัน: ngrok http 4000
+//    - จะได้ลิงก์ https://xxxx.ngrok.io ส่งให้ใครก็เข้าถึงได้ทันที (รวมมือถือ)
+// 5. ถ้าต้องการใช้งานจริงควร deploy ไปยัง cloud (เช่น AWS, Azure, GCP, Vercel, Render ฯลฯ) และตั้งค่า domain/SSL
+
+// หมายเหตุสำหรับการใช้งานบนมือถือและให้คนทั่วไปใช้ได้ทุกคน (public + mobile geolocation):
+// 1. ต้อง deploy หรือเปิดเว็บผ่าน HTTPS เท่านั้น (มือถือจะไม่อนุญาต geolocation ถ้าไม่ใช่ HTTPS หรือ localhost)
+// 2. วิธีง่ายสุดสำหรับทดสอบ/ใช้งานจริง:
+//    - ใช้ ngrok (https://ngrok.com/) เพื่อสร้าง public HTTPS URL ชั่วคราว
+//      ตัวอย่าง:
+//        1. ติดตั้ง ngrok (ดาวน์โหลดจากเว็บ ngrok.com)
+//        2. เปิด terminal ที่ server แล้วรัน: ngrok http 4000
+//        3. จะได้ลิงก์ https://xxxx.ngrok.io ส่งให้ใครก็เข้าได้ (รวมมือถือ)
+//        4. มือถือจะใช้ geolocation ได้เพราะเป็น HTTPS
+//    - หรือ deploy ไป cloud ที่รองรับ HTTPS (เช่น Vercel, Render, AWS, Azure, GCP, ฯลฯ)
+//    - หรือใช้ reverse proxy (nginx, Caddy) ตั้งค่า SSL ให้กับ server
+
+// 3. ถ้าใช้ในวง LAN เฉย ๆ (ไม่ใช่ HTTPS) มือถือจะไม่สามารถใช้ geolocation ได้ (ข้อจำกัดของ browser มือถือ)
+// 4. ถ้าใช้ ngrok หรือ cloud แล้ว ทุกคน (รวมมือถือ) จะเข้าเว็บและใช้ geolocation ได้สมบูรณ์
+
+// หมายเหตุ: ถ้าใช้ ngrok แล้วลิงก์ไม่ทำงาน ให้ตรวจสอบว่าได้รันคำสั่ง ngrok http 4000 ถูกต้องหรือไม่
+// และตรวจสอบว่า backend กำลังรันอยู่บน port 4000 หรือไม่
+// หากใช้ cloud server ให้ตรวจสอบว่าได้เปิด port 4000 ใน firewall/cloud security group หรือไม่
+// หากใช้ในองค์กร/บ้าน ให้ตรวจสอบการตั้งค่า router ว่าได้ทำ port forwarding ถูกต้องหรือไม่
+// หากยังมีปัญหา ให้ลองรีสตาร์ทเซิร์ฟเวอร์หรือดูที่ log เพื่อตรวจสอบข้อผิดพลาด

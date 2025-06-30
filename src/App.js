@@ -29,7 +29,9 @@ function App() {
       });
 
       if (mapRef.current && !mapRef.current._leaflet_id) {
-        const map = L.map(mapRef.current).setView([12.616, 102.104], 12);
+        const map = L.map(mapRef.current, {
+          tap: false // ปิด gesture tap บนมือถือที่อาจทำให้ map ไม่ตอบสนอง
+        }).setView([12.616, 102.104], 12);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           maxZoom: 19,
           attribution: '© OpenStreetMap'
@@ -54,6 +56,18 @@ function App() {
         });
 
         window.useMyLocation = function () {
+          // แนะนำผู้ใช้มือถือให้เปิดเว็บผ่าน HTTPS หรือ localhost
+          if (
+            window.location.protocol !== 'https:' &&
+            window.location.hostname !== 'localhost' &&
+            window.location.hostname !== '127.0.0.1'
+          ) {
+            alert(
+              "เบราว์เซอร์มือถือส่วนใหญ่จะไม่อนุญาตเข้าถึงตำแหน่งหากไม่ได้ใช้ HTTPS หรือ localhost\n" +
+              "โปรดเปิดเว็บผ่าน https:// หรือทดสอบบน localhost เท่านั้น"
+            );
+            return;
+          }
           if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
               (position) => {
@@ -65,7 +79,12 @@ function App() {
                 setMarker(userLatLng);
               },
               (error) => {
-                alert("ไม่สามารถเข้าถึงตำแหน่งของคุณได้: " + error.message);
+                alert("ไม่สามารถเข้าถึงตำแหน่งของคุณได้: " + error.message + "\nโปรดตรวจสอบว่าอนุญาตให้เข้าถึงตำแหน่งในเบราว์เซอร์มือถือแล้ว");
+              },
+              {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
               }
             );
           } else {
@@ -106,20 +125,13 @@ function App() {
       formData.append('mediaFiles', file);
     });
 
-    console.log('Submitting to', BACKEND_URL, 'with', {
-      ...form,
-      mediaFiles: form.mediaFiles.map(f => f.name)
-    });
-
     try {
       const res = await fetch(BACKEND_URL, {
         method: 'POST',
         body: formData
       });
-      console.log('Response status:', res.status);
       if (res.ok) {
         const data = await res.json();
-        console.log('Backend response:', data);
         setSubmitResult(data.message || 'ส่งคำร้องสำเร็จ!');
         setForm({
           name: '',
@@ -134,11 +146,9 @@ function App() {
       } else {
         const text = await res.text();
         setSubmitResult('เกิดข้อผิดพลาดในการส่งคำร้อง: ' + text);
-        console.error('Error response:', text);
       }
     } catch (err) {
-      setSubmitResult('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้: ' + err.message);
-      console.error('Fetch error:', err);
+      setSubmitResult('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้: ' + err.message + '\nโปรดตรวจสอบการเชื่อมต่ออินเทอร์เน็ตหรือสัญญาณมือถือ');
     }
     setLoading(false);
   };
