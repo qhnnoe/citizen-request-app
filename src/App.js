@@ -63,8 +63,7 @@ function App() {
             window.location.hostname !== '127.0.0.1'
           ) {
             alert(
-              "เบราว์เซอร์มือถือส่วนใหญ่จะไม่อนุญาตเข้าถึงตำแหน่งหากไม่ได้ใช้ HTTPS หรือ localhost\n" +
-              "โปรดเปิดเว็บผ่าน https:// หรือทดสอบบน localhost เท่านั้น"
+              "มือถือจะใช้ตำแหน่งได้เฉพาะเมื่อเปิดผ่าน HTTPS หรือ localhost เท่านั้น"
             );
             return;
           }
@@ -79,7 +78,7 @@ function App() {
                 setMarker(userLatLng);
               },
               (error) => {
-                alert("ไม่สามารถเข้าถึงตำแหน่งของคุณได้: " + error.message + "\nโปรดตรวจสอบว่าอนุญาตให้เข้าถึงตำแหน่งในเบราว์เซอร์มือถือแล้ว");
+                alert("ไม่สามารถเข้าถึงตำแหน่งของคุณได้: " + error.message);
               },
               {
                 enableHighAccuracy: true,
@@ -264,3 +263,47 @@ function App() {
 }
 
 export default App;
+
+// หมายเหตุสำหรับ geolocation ใน App.js:
+// - ต้อง import 'leaflet/dist/leaflet.css' และติดตั้ง leaflet ให้ถูกต้อง
+// - ฟังก์ชัน window.useMyLocation ต้องถูกเรียกตอนกดปุ่ม "ใช้ตำแหน่งของฉัน"
+// - ถ้าเปิดเว็บผ่าน HTTPS หรือ localhost มือถือถึงจะอนุญาต geolocation
+// - ถ้าใช้ cloud หรือ ngrok แล้ว ยังไม่ได้ ให้ตรวจสอบว่า domain เป็น https:// และไม่ได้ block location
+// - ถ้า error เป็น "User Denied Geolocation" แปลว่าผู้ใช้หรือ browser block location (ต้อง Allow ใหม่)
+// - ถ้า error เป็น "origin does not have permission" แปลว่าไม่ได้เปิดผ่าน HTTPS หรือ localhost
+
+// ตัวอย่างโค้ดที่ถูกต้อง (ย่อ):
+/*
+useEffect(() => {
+  import('leaflet').then(L => {
+    // ...existing code...
+    window.useMyLocation = function () {
+      if (
+        location.protocol !== 'https:' &&
+        location.hostname !== 'localhost' &&
+        location.hostname !== '127.0.0.1'
+      ) {
+        alert("มือถือจะใช้ตำแหน่งได้เฉพาะเมื่อเปิดผ่าน HTTPS หรือ localhost เท่านั้น");
+        return;
+      }
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            // ...set marker...
+          },
+          (error) => {
+            alert("ไม่สามารถเข้าถึงตำแหน่งของคุณได้: " + error.message);
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+      } else {
+        alert("เบราว์เซอร์ไม่รองรับ Geolocation");
+      }
+    };
+    // ...existing code...
+  });
+}, []);
+*/
+
+// สรุป: ถ้าเปิดผ่าน HTTPS และ Allow แล้ว มือถือจะใช้ตำแหน่งได้
+// ถ้ายังไม่ได้ ให้ reset permission หรือเปลี่ยน browser
