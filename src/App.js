@@ -63,7 +63,8 @@ function App() {
             window.location.hostname !== '127.0.0.1'
           ) {
             alert(
-              "มือถือจะใช้ตำแหน่งได้เฉพาะเมื่อเปิดผ่าน HTTPS หรือ localhost เท่านั้น"
+              "มือถือจะใช้ตำแหน่งได้เฉพาะเมื่อเปิดผ่าน HTTPS หรือ localhost เท่านั้น\n" +
+              "ถ้า deploy จริงควรเปิดผ่าน https:// หรือใช้บริการเช่น ngrok หรือ cloud ที่รองรับ SSL"
             );
             return;
           }
@@ -78,7 +79,11 @@ function App() {
                 setMarker(userLatLng);
               },
               (error) => {
-                alert("ไม่สามารถเข้าถึงตำแหน่งของคุณได้: " + error.message);
+                if (error.code === 1) {
+                  alert("คุณไม่ได้อนุญาตให้เข้าถึงตำแหน่ง กรุณาอนุญาตใน browser แล้วลองใหม่");
+                } else {
+                  alert("ไม่สามารถเข้าถึงตำแหน่งของคุณได้: " + error.message);
+                }
               },
               {
                 enableHighAccuracy: true,
